@@ -29,7 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "stdbool.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -61,7 +61,10 @@ extern I2C_HandleTypeDef hi2c2;
 void send_data_to_master(uint8_t* tx_buf, uint16_t len);
 void MX_I2C1_Init(void);
 void MX_I2C2_Init(void);
-
+void I2C_RecoverSDA(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda);
+bool I2C_IsSDALow(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda);
+bool I2C_IsSCLLow(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda);
+void I2C_RecoverSCL(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda);
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

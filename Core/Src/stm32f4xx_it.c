@@ -112,6 +112,7 @@ void HardFault_Handler(void)
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
   /* USER CODE END HardFault_IRQn 0 */
+  RA_POWEREX_DEBUG("HardFault_Handler\r\n");
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
@@ -289,7 +290,7 @@ void I2C2_EV_IRQHandler(void)
   /* USER CODE BEGIN I2C2_EV_IRQn 0 */
 
   /* USER CODE END I2C2_EV_IRQn 0 */
-  I2C_DEBUG("I2C2_EV_IRQHandler\r\n");
+  //I2C_DEBUG("I2C2_EV_IRQHandler\r\n");
   HAL_I2C_EV_IRQHandler(&hi2c2);
   /* USER CODE BEGIN I2C2_EV_IRQn 1 */
 
@@ -431,7 +432,7 @@ void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
   // 完成一次通信，清除状态
   first_byte_state = 1;
   offset = 0;
-  I2C_DEBUG("HAL_I2C_ListenCpltCallback\r\n");
+  //I2C_DEBUG("HAL_I2C_ListenCpltCallback\r\n");
   HAL_I2C_EnableListen_IT(hi2c);
 }
 
@@ -443,13 +444,13 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
   if(TransferDirection == I2C_DIRECTION_TRANSMIT) 
   {
     
-      I2C_DEBUG("I2C_DIRECTION_TRANSMIT\r\n");
+      //I2C_DEBUG("I2C_DIRECTION_TRANSMIT\r\n");
       HAL_I2C_Slave_Seq_Receive_IT(hi2c, rx_buf, 1, I2C_LAST_FRAME);
       //HAL_I2C_Slave_Receive(&hi2c2, rx_buf, 1, 1000);
   }
   else
   {
-    I2C_DEBUG("I2C_DIRECTION_RECEIVE\r\n");
+    //I2C_DEBUG("I2C_DIRECTION_RECEIVE\r\n");
     //HAL_I2C_Slave_Transmit(&hi2c2, tx_buf, 2, 1000);
     // 主机接收，从机发送
     tx_buf[0]=11;
@@ -492,9 +493,19 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
     // 清理自定义状态变量
     first_byte_state = 1;
     offset = 0;
+
+      if (I2C_IsSDALow(hi2c,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SDA 被拉低，调用恢复函数
+        I2C_RecoverSDA(hi2c,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      if (I2C_IsSCLLow(hi2c,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SCL 被拉低，调用恢复函数
+        I2C_RecoverSCL(hi2c,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      MX_I2C1_Init();
 #endif
     // 重新使能侦听模式，保证从机持续响应主机
-    HAL_I2C_EnableListen_IT(&hi2c1);
+      HAL_I2C_EnableListen_IT(&hi2c1);
   }
   // 处理其他I2C实例的错误
   else if (hi2c->Instance == hi2c2.Instance)
@@ -529,9 +540,16 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
     first_byte_state = 1;
     offset = 0;
 #endif
+    if (I2C_IsSDALow(&hi2c2,GPIOB,GPIO_PIN_10,GPIO_PIN_11)) {
+      // 如果 SDA 被拉低，调用恢复函数
+      I2C_RecoverSDA(&hi2c2,GPIOB,GPIO_PIN_10,GPIO_PIN_11);
+    }
+    if (I2C_IsSCLLow(&hi2c2,GPIOB,GPIO_PIN_10,GPIO_PIN_11)) {
+      // 如果 SCL 被拉低，调用恢复函数
+      I2C_RecoverSCL(&hi2c2,GPIOB,GPIO_PIN_10,GPIO_PIN_11);
+    }
+    MX_I2C2_Init();
     // 重新使能侦听模式，保证从机持续响应主机
-    HAL_I2C_DeInit(&hi2c2);
-    HAL_I2C_Init(&hi2c2);
     HAL_I2C_EnableListen_IT(&hi2c2);
   }
 }

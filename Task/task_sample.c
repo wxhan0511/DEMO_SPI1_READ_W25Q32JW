@@ -56,6 +56,5 @@ void task_sample_init(void)
     task_sample_handle = osThreadNew(task_sample_run,NULL, &task_sample_attributes);
     if (task_sample_handle == NULL)
     {
-        uart_send("Task Sample Task Handle Error!");
     }
 }

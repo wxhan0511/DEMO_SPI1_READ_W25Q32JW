@@ -335,22 +335,42 @@ void SlaveRxTask(void *argument)
   uint16_t latest_sample_data[8] = {0}; // Store the latest sampled data for 8 channel after conversion and calibration
   uint8_t latest_sample_index[8] = {0}; // Store the corresponding index of the latest sampled data for 8 channel
   float IV_data = 0.0f; // Voltage or current data before calibration
-  
+  uint8_t r[2]={};
+  uint8_t t[2]={};
   for (;;)
   {
+
+
 #if 0
-    ret = HAL_I2C_Master_Transmit(&hi2c1,0x80, rx_buf, 1,1000); // Get the CMD instruction, 1BYTE
+    //主机
+    ret = HAL_I2C_Master_Transmit(&hi2c1,0x80, r, 1,1000); // Get the CMD instruction, 1BYTE
     if (ret == HAL_OK) printf("T ok\r\n");
-    else printf("T fail\r\n");
-    osDelay(100);
-    ret = HAL_I2C_Master_Receive(&hi2c1, 0x80,tx_buf, 2, 1000);
+    else {
+      printf("T fail\r\n");
+      HAL_I2C_DeInit(&hi2c1);
+      HAL_I2C_Init(&hi2c1);
+      if (I2C_IsSDALow(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SDA 被拉低，调用恢复函数
+        I2C_RecoverSDA(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      if (I2C_IsSCLLow(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SCL 被拉低，调用恢复函数
+        I2C_RecoverSCL(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      __disable_irq();
+      MX_I2C1_Init();
+      __enable_irq();
+       
+    }
+    osDelay(10);
+    ret = HAL_I2C_Master_Receive(&hi2c1, 0x80,t, 2, 1000);
     if (ret == HAL_OK) 
     {
       printf("R ok\r\n");
-      printf("tx_buf[0]:%x\r\n",tx_buf[0]);
-      printf("tx_buf[1]:%x\r\n",tx_buf[1]);
-      tx_buf[0]=0;
-      tx_buf[1]=0;
+      printf("tx_buf[0]:%x\r\n",t[0]);
+      printf("tx_buf[1]:%x\r\n",t[1]);
+      t[0]=0;
+      t[1]=0;
 
     }
     else 
@@ -358,8 +378,19 @@ void SlaveRxTask(void *argument)
       printf("R fail\r\n");
       HAL_I2C_DeInit(&hi2c1);
       HAL_I2C_Init(&hi2c1);
+      if (I2C_IsSDALow(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SDA 被拉低，调用恢复函数
+        I2C_RecoverSDA(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      if (I2C_IsSCLLow(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7)) {
+        // 如果 SCL 被拉低，调用恢复函数
+        I2C_RecoverSCL(&hi2c1,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
+      }
+      __disable_irq();
+      MX_I2C1_Init();
+      __enable_irq();
     }
-    osDelay(100);
+    osDelay(10);
 
 
 #endif
@@ -477,7 +508,8 @@ void SlaveRxTask(void *argument)
       __enable_irq();
     }
 #endif
-    //osDelay(100);
+   //printf("111111\r\n"); 
+   osDelay(100);
 
   }
 
@@ -577,3 +609,168 @@ void led_timer_callback(void *argument)
   }
 }
 /* USER CODE END Application */
+
+
+void I2C_RecoverSDA(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // 1. 禁用 I2C 外设
+    __HAL_I2C_DISABLE(hi2c);
+
+    // 2. 将 SDA 和 SCL 引脚配置为 GPIO 输出模式
+    GPIO_InitStruct.Pin = sda | scl; // 假设 SDA: PB8, SCL: PB9，需根据实际引脚调整
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;    // 开漏输出
+    GPIO_InitStruct.Pull = GPIO_PULLUP;            // 上拉
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 3. 发送若干 SCL 时钟脉冲以释放 SDA
+    for (uint8_t i = 0; i < 9; i++) {
+        HAL_GPIO_WritePin(port, scl, GPIO_PIN_SET);   // SCL 高                                        // 短暂延时
+        HAL_GPIO_WritePin(port, scl, GPIO_PIN_RESET); // SCL 低
+    }
+
+    // 4. 检查 SDA 是否被释放（变为高电平）
+    if (HAL_GPIO_ReadPin(port, sda) == GPIO_PIN_SET) {
+        // SDA 已恢复
+        printf("SDA line recovered successfully.\n");
+    } else {
+        // SDA 未恢复，可能是硬件问题
+        printf("Failed to recover SDA line.\n");
+    }
+
+    // 5. 重新配置 SDA 和 SCL 为 I2C 功能
+    GPIO_InitStruct.Pin = sda | scl;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;        // 复用开漏模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;     // 根据实际 I2C 外设调整
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 6. 重新启用 I2C 外设
+    __HAL_I2C_ENABLE(hi2c);
+
+    // 7. 可选：复位 I2C 外设
+    HAL_I2C_DeInit(hi2c);
+    HAL_I2C_Init(hi2c);
+}
+
+bool I2C_IsSDALow(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    bool isLow = false;
+
+    // 1. 禁用 I2C 外设以避免干扰
+    __HAL_I2C_DISABLE(hi2c);
+
+    // 2. 将 SDA 引脚配置为输入模式
+    GPIO_InitStruct.Pin = sda; // 假设 SDA 为 PB8，需根据实际引脚调整
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // 输入模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;     // 上拉
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 3. 读取 SDA 引脚状态
+    if (HAL_GPIO_ReadPin(port, sda) == GPIO_PIN_RESET) {
+        isLow = true; // SDA 被拉低
+        //printf("SDA is low.\n");
+    } else {
+        //printf("SDA is high.\n");
+    }
+
+    // 4. 恢复 SDA 引脚为 I2C 功能
+    GPIO_InitStruct.Pin = sda;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;    // 复用开漏模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1; // 根据实际 I2C 外设调整
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 5. 重新启用 I2C 外设
+    __HAL_I2C_ENABLE(hi2c);
+
+    return isLow;
+}
+
+
+bool I2C_IsSCLLow(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    bool isLow = false;
+
+    // 1. 禁用 I2C 外设以避免干扰
+    __HAL_I2C_DISABLE(hi2c);
+
+    // 2. 将 SCL 引脚配置为输入模式
+    GPIO_InitStruct.Pin = scl; // 假设 SCL 为 PB9，需根据实际引脚调整
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // 输入模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;     // 上拉
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 3. 读取 SCL 引脚状态
+    if (HAL_GPIO_ReadPin(port, scl) == GPIO_PIN_RESET) {
+        isLow = true; // SCL 被拉低
+        //printf("SCL is low.\n");
+    } else {
+        //printf("SCL is high.\n");
+    }
+
+    // 4. 恢复 SCL 引脚为 I2C 功能
+    GPIO_InitStruct.Pin = scl;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;    // 复用开漏模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1; // 根据实际 I2C 外设调整
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 5. 重新启用 I2C 外设
+    __HAL_I2C_ENABLE(hi2c);
+
+    return isLow;
+}
+
+void I2C_RecoverSCL(I2C_HandleTypeDef *hi2c , GPIO_TypeDef* port , uint16_t scl , uint16_t sda) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // 1. 禁用 I2C 外设
+    __HAL_I2C_DISABLE(hi2c);
+
+    // 2. 将 SCL 和 SDA 引脚配置为 GPIO 输出模式
+    GPIO_InitStruct.Pin = scl | sda; // 假设 SCL: PB9, SDA: PB8，需根据实际引脚调整
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;    // 开漏输出
+    GPIO_InitStruct.Pull = GPIO_PULLUP;            // 上拉
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 3. 尝试释放 SCL（通过切换电平）
+    for (uint8_t i = 0; i < 9; i++) {
+        HAL_GPIO_WritePin(port, scl, GPIO_PIN_SET);   // SCL 高                                       // 短暂延时
+        HAL_GPIO_WritePin(port, scl, GPIO_PIN_RESET); // SCL 低
+    }
+
+    // 4. 检查 SCL 是否被释放（变为高电平）
+    GPIO_InitStruct.Pin = scl;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // 切换为输入模式以检测
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    if (HAL_GPIO_ReadPin(port, scl) == GPIO_PIN_SET) {
+        //printf("SCL line recovered successfully.\n");
+    } else {
+        //printf("Failed to recover SCL line.\n");
+    }
+
+    // 5. 恢复 SCL 和 SDA 为 I2C 功能
+    GPIO_InitStruct.Pin = scl | sda;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;    // 复用开漏模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1; // 根据实际 I2C 外设调整
+    HAL_GPIO_Init(port, &GPIO_InitStruct);
+
+    // 6. 重新启用 I2C 外设
+    __HAL_I2C_ENABLE(hi2c);
+
+    // 7. 可选：复位 I2C 外设
+    HAL_I2C_DeInit(hi2c);
+    HAL_I2C_Init(hi2c);
+}
+
+
