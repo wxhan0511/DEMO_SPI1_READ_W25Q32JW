@@ -39,11 +39,16 @@ void raw_data_queue_push(float value , uint8_t index)
  */
 uint8_t raw_data_queue_get_index(uint16_t index)
 {
-    if (index < RAW_DATA_INDEX_QUEUE_SIZE)
+    if (0 <= index && index < RAW_DATA_INDEX_QUEUE_SIZE)
     {
         return raw_data_index_queue[index];
     }
-    return 0;
+    else if(index < 0){
+        return raw_data_index_queue[RAW_DATA_INDEX_QUEUE_SIZE + index];
+    }
+    else{
+        return 0;
+    }
 }
 
 /**
@@ -53,11 +58,16 @@ uint8_t raw_data_queue_get_index(uint16_t index)
  */
 float raw_data_queue_get_data(uint16_t index)
 {
-    if (index < RAW_DATA_QUEUE_SIZE)
+    if (0 <= index && index < RAW_DATA_QUEUE_SIZE)
     {
         return raw_data_queue[index];
     }
-    return 0.0f; // 返回0表示无效索引
+    else if(index < 0){
+        return raw_data_queue[RAW_DATA_QUEUE_SIZE + index];
+    }
+    else{
+        return 0.0f;
+    }
 }
 
 #define ADC_DEBUG 1
@@ -238,7 +248,13 @@ void bsp_ads1256_init(const ads1256_dev_t* handle)
     bsp_delay_ms(100);
 
     bsp_ads1256_wait_drdy(handle);
-
+    //read ads1256 reg status
+    handle->read_reg(handle, REG_STATUS, &data[0], 5);
+    RA_POWEREX_DEBUG("ADS1256 REG_STATUS:0x%02X\r\n", data[0]);
+    RA_POWEREX_DEBUG("ADS1256 REG_MUX:0x%02X\r\n", data[1]);
+    RA_POWEREX_DEBUG("ADS1256 REG_ADCON:0x%02X\r\n", data[2]);
+    RA_POWEREX_DEBUG("ADS1256 REG_DRATE:0x%02X\r\n", data[3]);
+    RA_POWEREX_DEBUG("ADS1256 REG_IO:0x%02X\r\n", data[4]);
     handle->cs_control(handle->cs_group, handle->cs_pin, 0);
 
     handle->write_byte(handle, CMD_SELFCAL);
@@ -257,7 +273,13 @@ void bsp_ads1256_init(const ads1256_dev_t* handle)
     //data[3] = 0x82;//500sps
     data[4] = 0x00;
     handle->write_reg(handle, 0x00, data, 5);
-
+    handle->read_reg(handle, REG_STATUS, &data[0], 5);
+    RA_POWEREX_DEBUG("ADS1256 REG_STATUS:0x%02X\r\n", data[0]);
+    RA_POWEREX_DEBUG("ADS1256 REG_STATUS:0x%02X\r\n", data[0]);
+    RA_POWEREX_DEBUG("ADS1256 REG_MUX:0x%02X\r\n", data[1]);
+    RA_POWEREX_DEBUG("ADS1256 REG_ADCON:0x%02X\r\n", data[2]);
+    RA_POWEREX_DEBUG("ADS1256 REG_DRATE:0x%02X\r\n", data[3]);
+    RA_POWEREX_DEBUG("ADS1256 REG_IO:0x%02X\r\n", data[4]);
     bsp_delay_ms(100);
 }
 /**
@@ -452,9 +474,7 @@ void bsp_ads1256_irq_handle(ads1256_dev_t* handle)
             const double raw_data = handle->data_buffer_avg[handle->last_channel]*ADC_RATIO*0.000001;
             //printf("channel %d raw data %f \r\n",handle->last_channel,raw_data);
             raw_data_queue_push(raw_data , handle->last_channel);   //push data and index(corresponding channel) to ring queue
-#if 0
-            printf("channel %d raw data %f \r\n",handle->last_channel,raw_data);
-#endif
+            AD_DATA_DEBUG("channel %d raw data %f \r\n",handle->last_channel,raw_data);
 
             //const double compare = bsp_adc_vol_convert_64pin(handle->vol_gear,raw_data,handle->single_vol_cali_en);
             //handle->data_buffer_avg[handle->last_channel] = compare;

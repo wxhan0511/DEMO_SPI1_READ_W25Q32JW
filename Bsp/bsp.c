@@ -16,6 +16,7 @@
 #include "bsp.h"
 #include "main.h"
 #include "usart.h"
+#include "usb_device.h"
 
 /* BSP function modules */
 #include "bsp_ads1256.h"
@@ -26,6 +27,8 @@
 #include "bsp_calibration.h"
 #include "bsp_power.h"
 #include "oled.h"
+#include "i2c.h"
+#include "bsp_i2c_bus.h"
 
 /* Tool modules */
 #include "retarget.h"
@@ -38,7 +41,7 @@ static void bsp_test_spi_flash(void);
 static void bsp_init_power_control(void);
 static void bsp_init_interrupts(void);
 static void bsp_level_shift_direction_set(uint8_t dir);
-
+static void MVDD_VDDIO_Power_Init(void);
 
 /**
  * @brief Firmware name stored in specific section
@@ -75,25 +78,25 @@ uint8_t magic_number[4] = {0x12, 0x34, 0xf8, 0x8f};
  */
 void bsp_init()
 {
-
     bsp_retarget_init(&huart1);
-
     bsp_init_dwt();
-
     /* Print system version information */
     bsp_print_version_info();
-
     MX_CRC_Init();
-
     // bsp_test_spi_flash();
-
-    //calibration_set_defaults();
+    calibration_set_defaults();
     //calibration_save();
-    calibration_load();
+    //calibration_load();
     bsp_init_power_control();
     bsp_init_adc_system();
     bsp_level_shift_direction_set(1);
     bsp_dac_init(&dac_dev);
+    //MX_USB_DEVICE__Init();
+    //MVDD,VDDIO
+    MVDD_VDDIO_Power_Init();
+
+
+
     RA_POWEREX_INFO("------------- bsp init finish -------------\r\n");
 }
 /**
@@ -103,7 +106,7 @@ void bsp_init()
 static void bsp_init_power_control(void)
 {
     ELVSS_ENABLE();
-    ELVDD_ENABLE();
+    ELVDD_DISABLE();
     VCC_ENABLE();
     IOVCC_ENABLE();
     //On by default
@@ -148,7 +151,7 @@ static HAL_StatusTypeDef bsp_init_adc_system(void)
     }
 #endif
     /* Initialize ADS1256 */
-    //bsp_ads1256_init(&dev_vol);
+    bsp_ads1256_init(&dev_vol);
 #ifdef GEAR_FUNCTION
     /* Set sampling gear */
     bsp_select_sample_gear(dev_vol.sample_res_gear);
@@ -223,4 +226,18 @@ static void bsp_test_spi_flash(void)
             printf("\r\n");
         }
     }
+}
+
+static void MVDD_VDDIO_Power_Init(void)
+{
+
+    uint8_t VDDIO=0x75; //5.5 , 1.8
+    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    uint8_t temp =2;
+    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_MVDD_CMD,&temp,1);
+
+    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    uint8_t temp1 =8;
+    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_VDDIO_CMD,&temp1,1);
+
 }

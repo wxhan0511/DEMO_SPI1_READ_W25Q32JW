@@ -32,12 +32,12 @@ dac_dev_t dac_dev = {
  * @param dev DAC设备结构体指针
  * @note 初始化时设置4路通道的默认输出电压，并拉低LDAC引脚使能输出
  */
-void bsp_dac_init(dac_dev_t *dev)
+void  bsp_dac_init(dac_dev_t *dev)
 {
-    dac_dev.val[0] = 1500; // Set default voltage for ELVDD+
-    dac_dev.val[1] = 1500; // Set default voltage for ELVSS-
-    dac_dev.val[2] = 1500; // Set default voltage for VCC
-    dac_dev.val[3] = 1500; // Set default voltage for IOVCC
+    dac_dev.val[0] = 1645; // Set default voltage for ELVDD+  7000 先不上电，cs hign 配7V
+    dac_dev.val[1] = 1500; // Set default voltage for ELVSS-    0
+    dac_dev.val[2] = 1523; // Set default voltage for VCC    2700
+    dac_dev.val[3] = 2094; // Set default voltage for IOVCC  1800
     bsp_dac_multi_voltage_set(&dac_dev); // 同时更新通道0-3的输出
     HAL_GPIO_WritePin(LDAC_Port, LDAC_Pin, GPIO_PIN_RESET);
     RA_POWEREX_INFO("DAC initialized , all voltage input set 1500mv\r\n");

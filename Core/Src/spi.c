@@ -173,6 +173,40 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
   /* USER CODE END SPI1_MspInit 1 */
   }
+  else if(spiHandle->Instance==SPI2)
+  {
+    /* USER CODE BEGIN SPI2_MspInit 0 */
+
+    /* USER CODE END SPI2_MspInit 0 */
+    /* SPI2 clock enable */
+    __HAL_RCC_SPI2_CLK_ENABLE();
+
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    /**SPI2 GPIO Configuration
+    PB12    ------> SPI2_CS
+    PB13     ------> SPI2_SCK
+    PC2     ------> SPI2_MISO
+    PC3     ------> SPI2_MOSI
+    */
+    GPIO_InitStruct.Pin = TSPI_CS_Pin|TSPI_CLK_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; 
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = TSPI_MISO_Pin|TSPI_MOSI_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    /* USER CODE BEGIN SPI2_MspInit 1 */
+
+    /* USER CODE END SPI2_MspInit 1 */
+  }
   else if(spiHandle->Instance==SPI3)
   {
   /* USER CODE BEGIN SPI3_MspInit 0 */

@@ -1,0 +1,73 @@
+/**
+ * @file       debug.h
+ * @brief      RA_PowerEX
+ * @author     wxhan
+ * @version    1.0.0
+ * @date       2025-10-10
+ * @copyright  Copyright (c) 2025 gcoreinc
+ * @license    MIT License
+ */
+
+#ifndef __DEBUG_H
+#define __DEBUG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Includes ------------------------------------------------------------------*/
+#include <stdio.h>
+/* Exported types ------------------------------------------------------------*/
+
+
+/* Exported constants --------------------------------------------------------*/
+
+/* Exported macro ------------------------------------------------------------*/
+
+/* Exported functions prototypes ---------------------------------------------*/
+
+#ifdef __cplusplus
+}
+#endif
+
+/* -------------------- Debug Macros -------------------- */
+#define RA_POWEREX_DEBUG_ENABLE 1
+#if RA_POWEREX_DEBUG_ENABLE
+    #define RA_POWEREX_PRINTF(fmt, ...)  printf("[RA_POWEREX] " fmt, ##__VA_ARGS__)
+    #define RA_POWEREX_INFO(fmt, ...)    printf("[RA_POWEREX][INFO] " fmt, ##__VA_ARGS__)
+    #define RA_POWEREX_WARN(fmt, ...)    printf("[RA_POWEREX][WARN] " fmt, ##__VA_ARGS__)
+    #define RA_POWEREX_ERROR(fmt, ...)   printf("[RA_POWEREX][ERROR] " fmt, ##__VA_ARGS__)
+    #define RA_POWEREX_DEBUG(fmt, ...)   printf("[RA_POWEREX][DEBUG] " fmt, ##__VA_ARGS__)
+#else
+    #define RA_POWEREX_PRINTF(fmt, ...)  do {} while(0)
+    #define RA_POWEREX_INFO(fmt, ...)    do {} while(0)
+    #define RA_POWEREX_WARN(fmt, ...)    do {} while(0)
+    #define RA_POWEREX_ERROR(fmt, ...)   do {} while(0)
+    #define RA_POWEREX_DEBUG(fmt, ...)   do {} while(0)
+#endif
+#define GTB_DEBUG_ENABLE
+#ifdef GTB_DEBUG_ENABLE
+    #define GTB_DEBUG(fmt, ...)          printf("[GTB DEBUG] " fmt, ##__VA_ARGS__)
+    #define GTB_INFO(fmt, ...)           printf("[GTB INFO] " fmt, ##__VA_ARGS__)
+#else
+    #define GTB_DEBUG(fmt, ...)          do {} while(0)
+    #define GTB_INFO(fmt, ...)           do {} while(0)
+#endif
+#define I2C_DEBUG_ENABLE
+#ifdef I2C_DEBUG_ENABLE
+    #define I2C_DEBUG(fmt, ...)          printf("[I2C DEBUG] " fmt, ##__VA_ARGS__)
+    #define I2C_INFO(fmt, ...)          printf("[I2C INFO] " fmt, ##__VA_ARGS__)
+#else
+    #define I2C_DEBUG(fmt, ...)          do {} while(0)
+    #define I2C_INFO(fmt, ...)          do {} while(0)
+#endif
+
+//#define AD_DATA_DEBUG_ENABLE
+#ifdef AD_DATA_DEBUG_ENABLE
+    #define AD_DATA_DEBUG(fmt, ...)      printf("[AD DATA DEBUG] " fmt, ##__VA_ARGS__)
+    #define AD_DATA_INFO(fmt, ...)       printf("[AD DATA INFO] " fmt, ##__VA_ARGS__)
+#else
+    #define AD_DATA_DEBUG(fmt, ...)      do {} while(0)
+    #define AD_DATA_INFO(fmt, ...)       do {} while(0)
+#endif  
+#endif /* __DEBUG_H */

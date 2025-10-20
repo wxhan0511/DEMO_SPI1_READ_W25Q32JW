@@ -25,10 +25,17 @@
 #include "usart.h"
 #include "delay.h"
 #include "bsp_power.h"
+#include "i2c_utils.h"
+#include "calibration_utils.h"
 
-static uint8_t first_byte_state = 1; // 是否收到第1个字节,也就是偏移地址（0：已收到，1：没有收到）                              
-uint8_t offset = 0;         // 偏移地址
-
+volatile uint8_t cmd = 0;  // Command from host computer
+int16_t power_data = 0; // Voltage or current data, in mV or mA, is sent to the host computer
+float offset, gain;
+HAL_StatusTypeDef ret = HAL_ERROR;
+float latest_sample_raw_data[8] = {0}; // Store the latest sampled raw data for 8 channel
+uint16_t latest_sample_data[8] = {0}; // Store the latest sampled data for 8 channel after conversion and calibration
+uint8_t latest_sample_index[8] = {0}; // Store the corresponding index of the latest sampled data for 8 channel
+float IV_data = 0.0f; // Voltage or current data before calibration
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -82,6 +89,8 @@ extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim6;
 
+extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -113,6 +122,26 @@ void HardFault_Handler(void)
 
   /* USER CODE END HardFault_IRQn 0 */
   RA_POWEREX_DEBUG("HardFault_Handler\r\n");
+  //先判断是MSP还是PSP，再打印 SP偏移6*4 字节处的PC值
+  uint32_t *sp;
+  __ASM volatile(
+      "TST lr, #4 \n"
+      "ITE EQ \n"
+      "MRSEQ %0, MSP \n"
+      "MRSNE %0, PSP \n"
+      : "=r"(sp));
+  RA_POWEREX_DEBUG("PC = 0x%08X\r\n", sp[6]);
+  if (SCB->SHCSR & SCB_SHCSR_MEMFAULTENA_Msk) {
+    RA_POWEREX_DEBUG("MemManage\r\n");
+  }
+  if (SCB->SHCSR & SCB_SHCSR_USGFAULTENA_Msk) {
+    RA_POWEREX_DEBUG("UsageFault\r\n");
+  }
+  if (SCB->SHCSR & SCB_SHCSR_BUSFAULTENA_Msk) {
+    RA_POWEREX_DEBUG("BusFault\r\n");
+  }
+
+
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
@@ -429,32 +458,47 @@ void DMA2_Stream7_IRQHandler(void)
 #ifdef I2C_SLAVE
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-  // 完成一次通信，清除状态
-  first_byte_state = 1;
-  offset = 0;
-  //I2C_DEBUG("HAL_I2C_ListenCpltCallback\r\n");
   HAL_I2C_EnableListen_IT(hi2c);
 }
 
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
 {
-  I2C_DEBUG("I2C Slave AddrCallback: AddrMatchCode=0x%02X, TransferDirection=%s\r\n", 
-              AddrMatchCode, (TransferDirection == I2C_DIRECTION_TRANSMIT) ? "Transmit" : "Receive");
   if(TransferDirection == I2C_DIRECTION_TRANSMIT) 
   {
-    
-      //I2C_DEBUG("I2C_DIRECTION_TRANSMIT\r\n");
       HAL_I2C_Slave_Seq_Receive_IT(hi2c, rx_buf, 1, I2C_LAST_FRAME);
-      //HAL_I2C_Slave_Receive(&hi2c2, rx_buf, 1, 1000);
   }
   else
   {
-    //I2C_DEBUG("I2C_DIRECTION_RECEIVE\r\n");
-    //HAL_I2C_Slave_Transmit(&hi2c2, tx_buf, 2, 1000);
-    // 主机接收，从机发送
-    tx_buf[0]=11;
-    tx_buf[1]=22;
+    cmd = rx_buf[0];
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      latest_sample_raw_data[i] = raw_data_queue_get_data(raw_data_queue_head - 1 - i);
+      latest_sample_index[i] = raw_data_queue_get_index(raw_data_queue_head - 1 - i);
+    }
+    //calibration
+    if(cmd == AD_I_ELVDD || cmd == AD_I_VCC || cmd == AD_I_IOVCC || cmd == AD_I_ELVSS){
+        sel_cali_param((cmd & 0x07), 1, 1, &offset, &gain);
+        IV_data = IV_data * 50 *1e4;
+        if(cmd == AD_I_ELVSS){
+          IV_data = -IV_data; // ELVSS电流为负值
+        }
+        IV_data = gain*IV_data + offset; 
+    }
+    else if(cmd == AD_V_ELVSS || cmd == AD_V_ELVDD || cmd == AD_V_VCC || cmd == AD_V_IOVCC){
+      sel_cali_param((cmd & 0x07), 1, 0, &offset, &gain);
+      IV_data = IV_data * 1e6 * 2.5;
+      if(cmd == AD_V_ELVSS){
+        IV_data = -IV_data; // ELVSS电压为负值
+      }
+      IV_data = gain*IV_data + offset; 
+    }
+    else{
+    }
+    power_data = float_to_int16_round(IV_data);    
+    //send data to host computer
+    memcpy(tx_buf, &power_data, 2);
+
     HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx_buf, 2, I2C_LAST_FRAME);
   }
   HAL_I2C_EnableListen_IT(hi2c);
@@ -503,6 +547,7 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
         I2C_RecoverSCL(hi2c,GPIOB,GPIO_PIN_6,GPIO_PIN_7);
       }
       MX_I2C1_Init();
+
     // 重新使能侦听模式，保证从机持续响应主机
       HAL_I2C_EnableListen_IT(&hi2c1);
   }
@@ -675,17 +720,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     // bsp_ads1256_irq_handle(&dev_cur);
 #endif
   }
-#ifdef I2C_MASTER
-  if (GPIO_Pin == I2C_EXTI0_Pin) // 主机收到从机通知
-  {
-    printf("I2C Master received notify from Slave\r\n");
-    TIM2_Start();
-    if (HAL_I2C_Master_Receive(&hi2c1, SLAVE_ADDR, rx_buf, DATA_SIZE, 1000) != HAL_OK)
-    {
-      printf("I2C Master not received...\r\n");
-    }
-    TIM2_Stop();
-  }
-#endif
 }
+
+/**
+  * @brief This function handles USB On The Go HS global interrupt.
+  */
+void OTG_HS_IRQHandler(void)
+{
+  /* USER CODE BEGIN OTG_HS_IRQn 0 */
+
+  /* USER CODE END OTG_HS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  /* USER CODE BEGIN OTG_HS_IRQn 1 */
+
+  /* USER CODE END OTG_HS_IRQn 1 */
+}
+
 /* USER CODE END 1 */

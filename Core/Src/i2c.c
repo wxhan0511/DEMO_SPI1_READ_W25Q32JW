@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "i2c.h"
+#include "config.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -82,7 +83,7 @@ void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-#ifdef I2C_SLAVE_I2C1_IRQ_RX
+#ifdef I2C_SLAVE_I2C1_LISTEN
   /* USER CODE BEGIN I2C1_Init 2 */
   HAL_I2C_EnableListen_IT(&hi2c1);
   /* USER CODE END I2C1_Init 2 */
@@ -119,7 +120,7 @@ void MX_I2C2_Init(void)
   {
     Error_Handler();
   }
-#ifdef I2C_SLAVE_I2C2_IRQ_RX
+#ifdef I2C_SLAVE_I2C2_LISTEN
   /* USER CODE BEGIN I2C2_Init 2 */
   HAL_I2C_EnableListen_IT(&hi2c2);  
   /* USER CODE END I2C2_Init 2 */
@@ -191,12 +192,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     }
 
     __HAL_LINKDMA(i2cHandle,hdmatx,hdma_i2c1_tx);
-#ifdef I2C_SLAVE_I2C1_IRQ_RX
+#ifdef I2C1_IRQ
     /* I2C1 interrupt Init */
     HAL_NVIC_SetPriority(I2C1_EV_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
   /* USER CODE BEGIN I2C1_MspInit 1 */
-    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 5, 0);  // 错误中断（非必须）
+    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
 #endif
   /* USER CODE END I2C1_MspInit 1 */
@@ -258,7 +259,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     }
 
     __HAL_LINKDMA(i2cHandle,hdmatx,hdma_i2c2_tx);
-#ifdef I2C_SLAVE_I2C2_IRQ_RX
+#ifdef I2C2_IRQ
     /* I2C2 interrupt Init */
     HAL_NVIC_SetPriority(I2C2_EV_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);

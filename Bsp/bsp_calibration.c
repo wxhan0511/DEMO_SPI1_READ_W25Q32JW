@@ -126,28 +126,28 @@ HAL_StatusTypeDef calibration_set_defaults(void)
     cal->ch0_set_v_gain = 1.0f;
     cal->ch0_read_v_offset = -66854;
     cal->ch0_read_v_gain = 1.0f;
-    cal->ch0_read_c_offset = -527.0f;
+    cal->ch0_read_c_offset = 0.0f;
     cal->ch0_read_c_gain = 1.0f;
 
     cal->ch1_set_v_offset = 115.35f;
     cal->ch1_set_v_gain = 1.0f;
     cal->ch1_read_v_offset = -66854;
     cal->ch1_read_v_gain = 1.0f;
-    cal->ch1_read_c_offset = -527.0f;
+    cal->ch1_read_c_offset = 0.0f;
     cal->ch1_read_c_gain = 1.0f;
 
     cal->ch2_set_v_offset = 81.25f;
     cal->ch2_set_v_gain = 1.0f;
     cal->ch2_read_v_offset = 57760;
     cal->ch2_read_v_gain = 1.0f;
-    cal->ch2_read_c_offset = -1455.0f;
+    cal->ch2_read_c_offset = 0.0f;
     cal->ch2_read_c_gain = 1.0f;
 
     cal->ch3_set_v_offset = -203.75f;
     cal->ch3_set_v_gain = 1.0f;
     cal->ch3_read_v_offset = -106917;
     cal->ch3_read_v_gain = 1.0f;
-    cal->ch3_read_c_offset = 761.5f;
+    cal->ch3_read_c_offset = 0.0f;
     cal->ch3_read_c_gain = 1.0f;
 
     cal->ch4_set_v_offset = -203.75f;

@@ -22,14 +22,15 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-// #define I2C_MASTER
-#define I2C_SLAVE
 #ifdef __cplusplus
 extern "C" {
 #endif
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include <stdio.h>
+#include "debug.h"
+#include "config.h"
+#include "cmsis_os2.h"
+#include "stdint.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -47,29 +48,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-/* -------------------- Debug Macros -------------------- */
-#define RA_POWEREX_DEBUG_ENABLE 1
-#if RA_POWEREX_DEBUG_ENABLE
-    #define RA_POWEREX_PRINTF(fmt, ...)  printf("[RA_POWEREX] " fmt, ##__VA_ARGS__)
-    #define RA_POWEREX_INFO(fmt, ...)    printf("[RA_POWEREX][INFO] " fmt, ##__VA_ARGS__)
-    #define RA_POWEREX_WARN(fmt, ...)    printf("[RA_POWEREX][WARN] " fmt, ##__VA_ARGS__)
-    #define RA_POWEREX_ERROR(fmt, ...)   printf("[RA_POWEREX][ERROR] " fmt, ##__VA_ARGS__)
-    #define RA_POWEREX_DEBUG(fmt, ...)   printf("[RA_POWEREX][DEBUG] " fmt, ##__VA_ARGS__)
-#else
-    #define RA_POWEREX_PRINTF(fmt, ...)  do {} while(0)
-    #define RA_POWEREX_INFO(fmt, ...)    do {} while(0)
-    #define RA_POWEREX_WARN(fmt, ...)    do {} while(0)
-    #define RA_POWEREX_ERROR(fmt, ...)   do {} while(0)
-    #define RA_POWEREX_DEBUG(fmt, ...)   do {} while(0)
-#endif
-#define I2C_DEBUG_ENABLE
-#ifdef I2C_DEBUG_ENABLE
-    #define I2C_DEBUG(fmt, ...)          printf("[I2C DEBUG] " fmt, ##__VA_ARGS__)
-    #define I2C_INFO(fmt, ...)          printf("[I2C INFO] " fmt, ##__VA_ARGS__)
-#else
-    #define I2C_DEBUG(fmt, ...)          do {} while(0)
-    #define I2C_INFO(fmt, ...)          do {} while(0)
-#endif
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -126,7 +105,19 @@ void Error_Handler(void);
 /* -------------------- DAC Pin Definitions -------------------- */
 #define LDAC_Pin GPIO_PIN_11
 #define LDAC_Port GPIOA
-
+/*---------------------TSPI Pin Definitions --------------------*/
+#define TSPI_CS_Pin GPIO_PIN_12
+#define TSPI_CS_GPIO_Port GPIOB
+#define TSPI_CLK_Pin GPIO_PIN_13
+#define TSPI_CLK_GPIO_Port GPIOB
+#define TSPI_MISO_Pin GPIO_PIN_2
+#define TSPI_MISO_GPIO_Port GPIOC
+#define TSPI_MOSI_Pin GPIO_PIN_3
+#define TSPI_MOSI_GPIO_Port GPIOC
+#define TSPI_INT_Pin GPIO_PIN_4
+#define TSPI_INT_GPIO_Port GPIOC
+#define TP_RESET_Pin GPIO_PIN_5
+#define TP_RESET_GPIO_Port GPIOC
 /*for power enhance board*/
 #define LEVEL_SHIFT_DAC_Pin GPIO_PIN_4
 #define LEVEL_SHIFT_DAC_GPIO_Port GPIOA

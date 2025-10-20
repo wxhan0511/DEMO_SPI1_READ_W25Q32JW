@@ -52,5 +52,6 @@ extern uint8_t hw_version[4];
 
 // func
 void bsp_init();
-
+void sel_cali_param(uint8_t ch, uint8_t type, uint8_t power, float *offset, float *gain);
+int16_t float_to_int16_round(float value);
 #endif // BSP_H
