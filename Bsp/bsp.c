@@ -91,7 +91,7 @@ void bsp_init()
     bsp_init_adc_system();
     bsp_level_shift_direction_set(1);
     bsp_dac_init(&dac_dev);
-    //MX_USB_DEVICE__Init();
+    MX_USB_DEVICE_Init();
     //MVDD,VDDIO
     MVDD_VDDIO_Power_Init();
 
@@ -229,15 +229,27 @@ static void bsp_test_spi_flash(void)
 }
 
 static void MVDD_VDDIO_Power_Init(void)
-{
-
+{   
+    BSP_STATUS status;
     uint8_t VDDIO=0x75; //5.5 , 1.8
-    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    //错误重发3次
+    // for (int i = 0; i < 3 && status != BSP_OK; i++) {
+    //     status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    // }
     uint8_t temp =2;
-    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_MVDD_CMD,&temp,1);
-
-    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_MVDD_CMD,&temp,1);
+    // for (int i = 0; i < 3 && status != BSP_OK; i++) {
+    //     status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_MVDD_CMD,&temp,1);
+    // }
+    status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    // for (int i = 0; i < 3 && status != BSP_OK; i++) {
+    //     status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    // }
     uint8_t temp1 =8;
-    bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_VDDIO_CMD,&temp1,1);
+    status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,RA_LP3907_2_VDDIO_CMD,&temp1,1);
+    // for (int i = 0; i < 3 && status != BSP_OK; i++) {
+    //     status = bsp_i2c_bus_hw_write_data(&hi2c2,RA_LP3907_2_ADDRESS,0x10,&VDDIO,1);
+    // }
 
 }

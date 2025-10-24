@@ -647,7 +647,16 @@ void I2C2_ER_IRQHandler(void)
 {
   HAL_I2C_ErrorCallback(&hi2c2);
 }
+void OTG_HS_IRQHandler(void)
+{
+  /* USER CODE BEGIN OTG_HS_IRQn 0 */
 
+  /* USER CODE END OTG_HS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  /* USER CODE BEGIN OTG_HS_IRQn 1 */
+
+  /* USER CODE END OTG_HS_IRQn 1 */
+}
 // 电压电流采样回调函数
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -720,20 +729,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     // bsp_ads1256_irq_handle(&dev_cur);
 #endif
   }
-}
-
-/**
-  * @brief This function handles USB On The Go HS global interrupt.
-  */
-void OTG_HS_IRQHandler(void)
-{
-  /* USER CODE BEGIN OTG_HS_IRQn 0 */
-
-  /* USER CODE END OTG_HS_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
-  /* USER CODE BEGIN OTG_HS_IRQn 1 */
-
-  /* USER CODE END OTG_HS_IRQn 1 */
 }
 
 /* USER CODE END 1 */

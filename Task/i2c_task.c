@@ -117,7 +117,9 @@ void MasterTxTask(void *argument)
               RA_POWEREX_DEBUG("bsp_dac_single_voltage_set channel 0 ELVDD failed\r\n");
           }
           osDelay(10);
+          RA_POWEREX_DEBUG("bsp_dac_single_voltage_set channel 0 ELVDD: %d\r\n",dac_dev.val[0]);
           ELVDD_ENABLE(); // 重新使能ELVDD
+          HAL_GPIO_WritePin(LDAC_Port, LDAC_Pin, GPIO_PIN_RESET);
           RA_POWEREX_DEBUG("ELVDD output enabled\r\n");
       }
     }
@@ -176,9 +178,29 @@ void MasterTxTask(void *argument)
       OLED_ShowString(0,10,"IOVCC",12,0);
       OLED_Showdecimal(32,10,latest_sample_data[AD_I_IOVCC],3,3,12, 0);
       OLED_Showdecimal(78,10,latest_sample_data[AD_V_IOVCC],4,2,12, 0);
+//IOVCC 200
+//AVDD 
+      // if(latest_sample_data[AD_I_IOVCC]>190)
+      // {
+      //   IOVCC_DISABLE();
+      //   ELVSS_DISABLE();
+      //   ELVDD_DISABLE();
+      //   VCC_DISABLE();
+      //   while(1);
+      // }
+
       OLED_ShowString(0,12,"ELVDD",12,0);
-      OLED_Showdecimal(32,12,latest_sample_data[AD_I_ELVDD],3,3,12, 0);
-      OLED_Showdecimal(78,12,latest_sample_data[AD_V_ELVDD],4,2,12, 0);
+      if (HAL_GPIO_ReadPin(ELVDD_EN_GPIO_Port , ELVDD_EN_Pin) == GPIO_PIN_RESET)
+      {
+        OLED_Showdecimal(32,12,0,3,3,12, 0);
+        OLED_Showdecimal(78,12,0,4,2,12, 0);
+      }
+      else
+      {
+        OLED_Showdecimal(32,12,latest_sample_data[AD_I_ELVDD],3,3,12, 0);
+        OLED_Showdecimal(78,12,latest_sample_data[AD_V_ELVDD],4,2,12, 0);
+      }
+
       OLED_ShowString(0,14,"VCC",12,0);
       OLED_Showdecimal(32,14,latest_sample_data[AD_I_VCC],3,3,12, 0);
       OLED_Showdecimal(78,14,latest_sample_data[AD_V_VCC],4,2,12, 0);

@@ -35,6 +35,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_custom_hid_if.h"
 #include "usbd_customhid.h" //包括发送函数头文件
+#include "usbd_cdc_if.h"
 extern USBD_HandleTypeDef hUsbDeviceHS;
 /* USER CODE END Includes */
 
@@ -57,7 +58,7 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 
 
 /* USER CODE BEGIN PV */
-extern unsigned char send_data_fs[64]; //USB接收缓存
+extern unsigned char receive_data_fs[64]; //USB接收缓存
 extern unsigned char USB_Received_Count;//USB接收数据计数
 extern uint8_t hid_state_fs; // USB HID状态
 /* USER CODE END PV */
@@ -83,7 +84,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-
+  
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -107,7 +108,7 @@ int main(void)
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_SPI3_Init();
- 
+  
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_SPI3_Init();
@@ -118,13 +119,14 @@ int main(void)
   MX_FREERTOS_Init();
   /* Start scheduler */
   osKernelStart();
-  /* We should never get here as control is now taken by the scheduler */
+  /* USER CODE BEGIN 2 */
+
+  /* USER CODE END 2 */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -147,8 +149,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -173,7 +177,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_1);
 }
+
 
 /* USER CODE BEGIN 4 */
 

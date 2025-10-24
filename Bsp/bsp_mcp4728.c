@@ -34,10 +34,10 @@ dac_dev_t dac_dev = {
  */
 void  bsp_dac_init(dac_dev_t *dev)
 {
-    dac_dev.val[0] = 1645; // Set default voltage for ELVDD+  7000 先不上电，cs hign 配7V
+    dac_dev.val[0] = 1200; // Set default voltage for ELVDD+  7000 先不上电，cs hign 配7V
     dac_dev.val[1] = 1500; // Set default voltage for ELVSS-    0
-    dac_dev.val[2] = 1523; // Set default voltage for VCC    2700
-    dac_dev.val[3] = 2094; // Set default voltage for IOVCC  1800
+    dac_dev.val[2] = -127; // Set default voltage for VCC    2700
+    dac_dev.val[3] = 1675; // Set default voltage for IOVCC  1800
     bsp_dac_multi_voltage_set(&dac_dev); // 同时更新通道0-3的输出
     HAL_GPIO_WritePin(LDAC_Port, LDAC_Pin, GPIO_PIN_RESET);
     RA_POWEREX_INFO("DAC initialized , all voltage input set 1500mv\r\n");
@@ -88,7 +88,7 @@ BSP_STATUS bsp_dac_multi_voltage_set(const dac_dev_t* dev) {
     }
 
     const HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(
-        dev->i2c_bus->handle, dev->i2c_bus->dev_addr, buf, buf_index, HAL_MAX_DELAY);
+        dev->i2c_bus->handle, dev->i2c_bus->dev_addr, buf, buf_index, 1000);
     if (status != HAL_OK)
     {
         printf("I2C transmit failed %d \r\n", status);

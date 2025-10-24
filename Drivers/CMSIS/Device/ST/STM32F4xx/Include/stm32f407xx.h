@@ -14105,7 +14105,7 @@ typedef struct
 #define USB_OTG_DIEPMSK_TXFURM_Pos               (8U)                          
 #define USB_OTG_DIEPMSK_TXFURM_Msk               (0x1UL << USB_OTG_DIEPMSK_TXFURM_Pos) /*!< 0x00000100 */
 #define USB_OTG_DIEPMSK_TXFURM                   USB_OTG_DIEPMSK_TXFURM_Msk    /*!< FIFO underrun mask                                */
-#define USB_OTG_DIEPMSK_BIM_Pos                  (9U)                          
+#define USB_OTG_DIEPMSK_BIM_Pos                  (13U)                          
 #define USB_OTG_DIEPMSK_BIM_Msk                  (0x1UL << USB_OTG_DIEPMSK_BIM_Pos) /*!< 0x00000200 */
 #define USB_OTG_DIEPMSK_BIM                      USB_OTG_DIEPMSK_BIM_Msk       /*!< BNA interrupt mask                                */
 

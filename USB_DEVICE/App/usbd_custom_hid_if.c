@@ -32,6 +32,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+unsigned char receive_data_fs[64];
 unsigned char send_data_fs[64];
 unsigned char USB_Received_Count;
 uint8_t hid_state_fs = 0;
@@ -212,8 +213,15 @@ static int8_t CUSTOM_HID_OutEvent_HS(uint8_t event_idx, uint8_t state)
 
 	for(i=0;i<USB_Received_Count;i++)
 	{
-		send_data_fs[i]=hhid->Report_buf[i];  //把接收到的数据送到自定义的缓存区保存（Report_buf[i]为USB的接收缓存区）
+		receive_data_fs[i]=hhid->Report_buf[i];  //把接收到的数据送到自定义的缓存区保存（Report_buf[i]为USB的接收缓存区）
 	}
+  
+  USB_DEBUG("USB Receive Data: ");
+  for(i=0;i<USB_Received_Count;i++)
+  {
+      USB_DEBUG("0x%02X ",receive_data_fs[i]);
+  }
+
   hid_state_fs = 1; //收到数据标志
 	/* Start next USB packet transfer once data processing is completed */
 	USBD_CUSTOM_HID_ReceivePacket(&hUsbDeviceHS);

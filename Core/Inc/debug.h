@@ -62,12 +62,23 @@ extern "C" {
     #define I2C_INFO(fmt, ...)          do {} while(0)
 #endif
 
-//#define AD_DATA_DEBUG_ENABLE
+#define AD_DATA_DEBUG_ENABLE
 #ifdef AD_DATA_DEBUG_ENABLE
     #define AD_DATA_DEBUG(fmt, ...)      printf("[AD DATA DEBUG] " fmt, ##__VA_ARGS__)
     #define AD_DATA_INFO(fmt, ...)       printf("[AD DATA INFO] " fmt, ##__VA_ARGS__)
 #else
     #define AD_DATA_DEBUG(fmt, ...)      do {} while(0)
     #define AD_DATA_INFO(fmt, ...)       do {} while(0)
-#endif  
+#endif
+
+#define USB_DEBUG_ENABLE
+#ifdef USB_DEBUG_ENABLE
+    #define USB_DEBUG(fmt, ...)          printf("[USB DEBUG] " fmt, ##__VA_ARGS__)
+    #define USB_INFO(fmt, ...)           printf("[USB INFO] " fmt, ##__VA_ARGS__)
+    #define USB_ERROR(fmt, ...)          printf("[USB ERROR] " fmt, ##__VA_ARGS__)
+#else
+    #define USB_DEBUG(fmt, ...)          do {} while(0)
+    #define USB_INFO(fmt, ...)           do {} while(0)
+    #define USB_ERROR(fmt, ...)          do {} while(0)
+#endif
 #endif /* __DEBUG_H */

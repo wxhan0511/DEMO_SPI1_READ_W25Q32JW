@@ -18,6 +18,7 @@
 #include "config.h"
 #include "gtb_com.h"
 #include "gtb_op.h"
+#include "usbd_cdc_if.h"
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -63,10 +64,12 @@ void server_gtb(void *argument)
 #ifdef USE_OLED
   osTimerStart(led_timerHandle, 1000);
 #endif
-
+  GTB_INFO("[gtb task] active \r\n");
+  uint8_t test_buf[] = "hello , CDC Virtual COM\r\n";
+  uint32_t send_cnt =0;
   for (;;)
   {
-#if 1
+#if 0
     hid_state_fs = 0;
     bsp_gtb_init(3);
     gtb_global_var_init(&tp_config_hid);
@@ -76,7 +79,11 @@ void server_gtb(void *argument)
     __IO uint8_t com_mode = GTB_HID;
 //    cdc_tx_buf[0] = 0xf8;
 //    cdc_tx_buf[1] = 0x80;
-    GTB_INFO("[gtb task] active \r\n");
+	  if (send_cnt % 1000 == 0)
+	  {
+		  CDC_Transmit_HS(test_buf,sizeof(test_buf) - 1);
+	  }
+	  send_cnt++;
 
         //检测USB连接状态
     if(hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED)
@@ -88,10 +95,19 @@ void server_gtb(void *argument)
     }
     else
     {
+        //send_data_fs
+        //发送
+#ifdef USE_USBD_COMPOSITE
+        USBD_CUSTOM_HID_SendReport(&hUsbDeviceHS, send_data_fs, 64, 0);
+        
+#else
+        //USBD_CUSTOM_HID_SendReport(&hUsbDeviceHS, send_data_fs, 64);
+       
+#endif
 
     }
 #endif
-    osDelay(1000);
+    osDelay(100);
   }
 
 }
