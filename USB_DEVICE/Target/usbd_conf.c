@@ -24,7 +24,7 @@
 #include "usbd_def.h"
 #include "usbd_core.h"
 
-#include "usbd_customhid.h"
+#include "usbd_cdc.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -329,24 +329,21 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   /* Init USB Ip. */
   if (pdev->id == DEVICE_HS) {
   /* Link the driver to the stack. */
-  /*hpcd_USB_OTG_HS 是 HAL 层的 USB OTG HS 控制器句柄。
-    pdev 是 USB 设备库的句柄。
-    这两者互相保存对方指针，方便后续回调和数据交互。*/
   hpcd_USB_OTG_HS.pData = pdev;
   pdev->pData = &hpcd_USB_OTG_HS;
 
   hpcd_USB_OTG_HS.Instance = USB_OTG_HS;
-  hpcd_USB_OTG_HS.Init.dev_endpoints = 6;           // 端点数
-  hpcd_USB_OTG_HS.Init.speed = PCD_SPEED_FULL;      // 速度（全速）
-  hpcd_USB_OTG_HS.Init.dma_enable = DISABLE;        // 不用DMA
-  hpcd_USB_OTG_HS.Init.phy_itface = USB_OTG_EMBEDDED_PHY; // 内部PHY
-  hpcd_USB_OTG_HS.Init.Sof_enable = DISABLE;        // 不使能SOF
-  hpcd_USB_OTG_HS.Init.low_power_enable = DISABLE;  // 不使能低功耗
-  hpcd_USB_OTG_HS.Init.lpm_enable = DISABLE;        // 不使能LPM
-  hpcd_USB_OTG_HS.Init.vbus_sensing_enable = DISABLE; // 不检测VBUS
-  hpcd_USB_OTG_HS.Init.use_dedicated_ep1 = DISABLE; // 不用专用端点1
-  hpcd_USB_OTG_HS.Init.use_external_vbus = DISABLE; // 不用外部VBUS
-  if (HAL_PCD_Init(&hpcd_USB_OTG_HS) != HAL_OK)//初始化 USB OTG HS 外设
+  hpcd_USB_OTG_HS.Init.dev_endpoints = 6;
+  hpcd_USB_OTG_HS.Init.speed = PCD_SPEED_FULL;
+  hpcd_USB_OTG_HS.Init.dma_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.phy_itface = USB_OTG_EMBEDDED_PHY;
+  hpcd_USB_OTG_HS.Init.Sof_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.low_power_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.lpm_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.vbus_sensing_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.use_dedicated_ep1 = DISABLE;
+  hpcd_USB_OTG_HS.Init.use_external_vbus = DISABLE;
+  if (HAL_PCD_Init(&hpcd_USB_OTG_HS) != HAL_OK)
   {
     Error_Handler( );
   }
@@ -366,9 +363,9 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   HAL_PCD_RegisterIsoOutIncpltCallback(&hpcd_USB_OTG_HS, PCD_ISOOUTIncompleteCallback);
   HAL_PCD_RegisterIsoInIncpltCallback(&hpcd_USB_OTG_HS, PCD_ISOINIncompleteCallback);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
-  HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_HS, 0x200);   // 设置接收FIFO大小
-  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS, 0, 0x80); // 设置端点0发送FIFO大小
-  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS, 1, 0x174);// 设置端点1发送FIFO大小
+  HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_HS, 0x200);
+  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS, 0, 0x80);
+  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_HS, 1, 0x174);
   }
   return USBD_OK;
 }
@@ -628,7 +625,7 @@ USBD_StatusTypeDef USBD_LL_SetTestMode(USBD_HandleTypeDef *pdev, uint8_t testmod
   */
 void *USBD_static_malloc(uint32_t size)
 {
-  static uint32_t mem[(sizeof(USBD_CUSTOM_HID_HandleTypeDef)/4+1)];/* On 32-bit boundary */
+  static uint32_t mem[(sizeof(USBD_CDC_HandleTypeDef)/4)+1];/* On 32-bit boundary */
   return mem;
 }
 

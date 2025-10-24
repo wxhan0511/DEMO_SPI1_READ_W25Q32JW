@@ -69,6 +69,11 @@ void server_gtb(void *argument)
   uint32_t send_cnt =0;
   for (;;)
   {
+    if (send_cnt % 10 == 0)
+	{
+		CDC_Transmit_HS(test_buf,sizeof(test_buf) - 1);
+	}
+	send_cnt++;
 #if 0
     hid_state_fs = 0;
     bsp_gtb_init(3);
@@ -79,11 +84,7 @@ void server_gtb(void *argument)
     __IO uint8_t com_mode = GTB_HID;
 //    cdc_tx_buf[0] = 0xf8;
 //    cdc_tx_buf[1] = 0x80;
-	  if (send_cnt % 1000 == 0)
-	  {
-		  CDC_Transmit_HS(test_buf,sizeof(test_buf) - 1);
-	  }
-	  send_cnt++;
+
 
         //检测USB连接状态
     if(hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED)

@@ -33,8 +33,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_custom_hid_if.h"
-#include "usbd_customhid.h" //包括发送函数头文件
+//#include "usbd_custom_hid_if.h"
+//#include "usbd_customhid.h" //包括发送函数头文件
 #include "usbd_cdc_if.h"
 extern USBD_HandleTypeDef hUsbDeviceHS;
 /* USER CODE END Includes */

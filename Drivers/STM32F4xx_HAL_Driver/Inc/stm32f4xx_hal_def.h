@@ -32,17 +32,6 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-
-
-/** 
-  * @brief  HAL Lock structures definition  
-  */
-typedef enum 
-{
-  HAL_UNLOCKED = 0x00U,
-  HAL_LOCKED   = 0x01U  
-} HAL_LockTypeDef;
-
 /** 
   * @brief  HAL Status structures definition  
   */  
@@ -53,9 +42,21 @@ typedef enum
   HAL_BUSY     = 0x02U,
   HAL_TIMEOUT  = 0x03U
 } HAL_StatusTypeDef;
+
+/** 
+  * @brief  HAL Lock structures definition  
+  */
+typedef enum 
+{
+  HAL_UNLOCKED = 0x00U,
+  HAL_LOCKED   = 0x01U  
+} HAL_LockTypeDef;
+
 /* Exported macro ------------------------------------------------------------*/
 
+#if !defined(UNUSED)
 #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+#endif /* UNUSED */
 
 #define HAL_MAX_DELAY      0xFFFFFFFFU
 

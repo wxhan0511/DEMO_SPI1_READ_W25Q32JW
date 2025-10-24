@@ -62,7 +62,7 @@ extern "C" {
     #define I2C_INFO(fmt, ...)          do {} while(0)
 #endif
 
-#define AD_DATA_DEBUG_ENABLE
+// #define AD_DATA_DEBUG_ENABLE
 #ifdef AD_DATA_DEBUG_ENABLE
     #define AD_DATA_DEBUG(fmt, ...)      printf("[AD DATA DEBUG] " fmt, ##__VA_ARGS__)
     #define AD_DATA_INFO(fmt, ...)       printf("[AD DATA INFO] " fmt, ##__VA_ARGS__)
