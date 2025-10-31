@@ -26,7 +26,12 @@
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
 
+
 /* USER CODE BEGIN Includes */
+
+/* USB CHID*/
+#include "usbd_customhid.h"
+#include "usbd_custom_hid_if.h"
 
 /* USER CODE END Includes */
 
@@ -72,6 +77,7 @@ void MX_USB_DEVICE_Init(void)
   {
     Error_Handler();
   }
+#ifdef CDC
   if (USBD_RegisterClass(&hUsbDeviceHS, &USBD_CDC) != USBD_OK)
   {
     Error_Handler();
@@ -80,11 +86,21 @@ void MX_USB_DEVICE_Init(void)
   {
     Error_Handler();
   }
+#elif defined(CHID)
+  if (USBD_RegisterClass(&hUsbDeviceHS, &USBD_CUSTOM_HID) != USBD_OK)
+  {
+    Error_Handler();
+  }
+  if (USBD_CUSTOM_HID_RegisterInterface(&hUsbDeviceHS, &USBD_CustomHID_fops_HS) != USBD_OK)
+  {
+    Error_Handler();
+  }
+#else
+#endif
   if (USBD_Start(&hUsbDeviceHS) != USBD_OK)
   {
     Error_Handler();
   }
-
   /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */
 
   /* USER CODE END USB_DEVICE_Init_PostTreatment */

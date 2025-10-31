@@ -36,7 +36,6 @@
 //#include "usbd_custom_hid_if.h"
 //#include "usbd_customhid.h" //包括发送函数头文件
 #include "usbd_cdc_if.h"
-extern USBD_HandleTypeDef hUsbDeviceHS;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,9 +57,9 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 
 
 /* USER CODE BEGIN PV */
-extern unsigned char receive_data_fs[64]; //USB接收缓存
-extern unsigned char USB_Received_Count;//USB接收数据计数
-extern uint8_t hid_state_fs; // USB HID状态
+unsigned char USB_Recive_Buffer[64] = {1,2,3,4,5,6,7,8,9,}; //USB接收缓存
+unsigned char USB_Received_Count = 0;//USB接收数据计数
+uint8_t hid_state_fs = 0; // USB HID状态
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,7 +107,6 @@ int main(void)
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_SPI3_Init();
-  
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_SPI3_Init();

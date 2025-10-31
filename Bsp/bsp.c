@@ -91,7 +91,6 @@ void bsp_init()
     bsp_level_shift_direction_set(1);
     bsp_dac_init(&dac_dev);
     MX_USB_DEVICE_Init();
-    //MVDD,VDDIO
     ra_xb_Power_Init();
 
     RA_POWEREX_INFO("------------- bsp init finish -------------\r\n");

@@ -27,10 +27,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 tp_config_t tp_config_hid;
-extern uint8_t hid_state_fs;
-extern uint8_t send_data_fs[64];
-// Declare the external USB device handle
-extern USBD_HandleTypeDef hUsbDeviceHS;
+
 
 const osThreadAttr_t server_gtb_attr = {
     .name = "ServerGtbTask",
@@ -74,7 +71,7 @@ void server_gtb(void *argument)
 	// 	CDC_Transmit_HS(test_buf,sizeof(test_buf) - 1);
 	// }
 	// send_cnt++;
-#if 0
+#if 1
     hid_state_fs = 0;
     bsp_gtb_init(3);
     gtb_global_var_init(&tp_config_hid);
@@ -102,7 +99,7 @@ void server_gtb(void *argument)
         USBD_CUSTOM_HID_SendReport(&hUsbDeviceHS, send_data_fs, 64, 0);
         
 #else
-        //USBD_CUSTOM_HID_SendReport(&hUsbDeviceHS, send_data_fs, 64);
+        USBD_CUSTOM_HID_SendReport(&hUsbDeviceHS, USB_Recive_Buffer, 64);
        
 #endif
 

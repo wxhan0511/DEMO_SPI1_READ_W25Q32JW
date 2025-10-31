@@ -25,9 +25,10 @@
 #include "usbd_core.h"
 
 #include "usbd_cdc.h"
-
+/*add chid*/
+#include "usbd_customhid.h"
 /* USER CODE BEGIN Includes */
-
+#include "config.h" //chid or cdc define
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -625,8 +626,15 @@ USBD_StatusTypeDef USBD_LL_SetTestMode(USBD_HandleTypeDef *pdev, uint8_t testmod
   */
 void *USBD_static_malloc(uint32_t size)
 {
-  static uint32_t mem[(sizeof(USBD_CDC_HandleTypeDef)/4)+1];/* On 32-bit boundary */
-  return mem;
+    static uint32_t mem_cdc[(sizeof(USBD_CDC_HandleTypeDef)/4)+1];      // CDC内存
+    static uint32_t mem_hid[(sizeof(USBD_CUSTOM_HID_HandleTypeDef)/4)+1]; // HID内存
+
+    if (size == sizeof(USBD_CDC_HandleTypeDef))
+        return mem_cdc;
+    else if (size == sizeof(USBD_CUSTOM_HID_HandleTypeDef))
+        return mem_hid;
+    else
+        return NULL; // 其他类型返回NULL
 }
 
 /**
