@@ -23,7 +23,7 @@
 #include "oled.h"
 #include "i2c.h"
 #include "bsp_i2c_bus.h"
-
+#include "w25qxx.h"
 /* drivers */
 #include "retarget.h"
 #include "delay.h"
@@ -68,7 +68,7 @@ uint8_t io0 = 0;
 uint8_t io1 = 0;
 uint8_t io2 = 0;
 uint8_t io3 = 0;
-
+uint8_t cal_buffer[0x3000] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
 /**
  * @brief BSP Board Support Package Initialization
@@ -77,33 +77,24 @@ uint8_t io3 = 0;
  */
 void bsp_init()
 {
-    da_calibration_data.elvdd_set_gain = -3.557;
-    da_calibration_data.elvdd_set_offset =12850;
-    da_calibration_data.elvss_set_gain = 3.557;
-    da_calibration_data.elvss_set_offset = 12850;
-    da_calibration_data.vcc_set_gain = -1.576;
-    da_calibration_data.vcc_set_offset = 5100;
-    da_calibration_data.iovcc_set_gain = -1.576;
-    da_calibration_data.iovcc_set_offset = 5100;
-
     bsp_retarget_init(&huart1);
     bsp_init_dwt();
-    /* Print system version information */
-    bsp_print_version_info();
-    MX_CRC_Init();
-    // bsp_test_spi_flash();
-    //calibration_set_defaults();
-    calibration_load(); //如果校准值不存在则写入默认值
-    //bsp_init_power_control();
-    bsp_init_adc_system();
-    bsp_level_shift_direction_set(1);
-    bsp_dac_init(&dac_dev);
-    MX_USB_DEVICE_Init();
-    ra_xb_Power_Init();
 
+    HAL_Delay(1000);
 
-
-    RA_POWEREX_INFO("------------- bsp init finish -------------\r\n");
+    W25QXX_Init();
+    W25QXX_Wait_Busy();
+    W25QXX_Read_SR();
+    uint8_t buf[20] = "Hello W25Q32!";
+    uint8_t rbuf[20] = {0,1,2,3,4,5};
+    W25QXX_Write_Enable();
+    W25QXX_Write(buf, 0x000000, 13);     // 写
+    W25QXX_Read(rbuf, 0x000000, 13);     // 读回来
+    for(int i = 0; i < 13; i++) {
+        printf("Read from W25Q32: %x\r\n", rbuf[i]);
+    }
+    printf("%s\r\n", rbuf);
+    while (1);
 }
 /**
  * @brief Initialize power control GPIOs and enable power rails

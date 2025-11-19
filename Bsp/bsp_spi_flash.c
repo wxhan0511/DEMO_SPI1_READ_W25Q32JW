@@ -25,7 +25,7 @@ uint8_t bsp_spiTransfer(uint8_t *g_spiTxBuf, uint8_t *g_spiRxBuf, uint16_t g_spi
     {
         return 0;
     }
-    status = HAL_SPI_TransmitReceive(&hspi3, g_spiTxBuf, g_spiRxBuf, g_spiLen, 1000000);
+    status = HAL_SPI_TransmitReceive(&hspi1, g_spiTxBuf, g_spiRxBuf, g_spiLen, 1000000);
     if(status != HAL_OK)
     {
         //Error_Handler(__FILE__, __LINE__);
@@ -206,6 +206,13 @@ void QSPI_FLASH_Wait_Busy(void)
 		if((_reg & 0x0101)==0) break;
 	}
 }
+
+uint8_t SPI1_ReadWriteByte1(uint8_t TxData) {
+    uint8_t RxData;
+    HAL_SPI_TransmitReceive(&hspi1, &TxData, &RxData, 1, HAL_MAX_DELAY);
+    return RxData;
+}
+
 /**
  * @brief 从SPI Flash读取数据
  * @param p_buf     读取数据缓冲区
@@ -225,8 +232,19 @@ void bsp_flash_read(uint8_t * p_buf, uint32_t read_addr, uint32_t read_size)
     {
         return;
     }
-    QSPI_FLASH_Wait_Busy();
+    //QSPI_FLASH_Wait_Busy();
     SF_CS_L();
+    // SPI1_ReadWriteByte1(0x05);// 读取状态寄存器 
+    // uint8_t status = SPI1_ReadWriteByte1(0xFF);
+    // printf("[spi flash] read status %d\r\n",status);
+    // SPI1_ReadWriteByte1(p_buf[0]); //发送读取命令
+    // SPI1_ReadWriteByte1((uint8_t)((read_addr >> 16) & 0xFF));
+    // SPI1_ReadWriteByte1((uint8_t)((read_addr >> 8) & 0xFF));
+    // SPI1_ReadWriteByte1((uint8_t)(read_addr & 0xFF));
+    // for (i = 0; i < read_size; i++) {
+    //     p_buf[i] = SPI1_ReadWriteByte1(0xFF);
+    //     printf("[spi flash] read data %x: %x\r\n", read_addr + i, p_buf[i]);
+    // }
     g_spiLen = 0;
     g_spiTxBuf[g_spiLen++] = (CMD_READ);
     g_spiTxBuf[g_spiLen++] = ((read_addr & 0xFF000000) >> 24);
@@ -457,7 +475,7 @@ uint8_t bsp_flash_write(uint8_t* p_buf, uint32_t write_addr, uint16_t write_size
     count = Flash_SectorSize - Addr;
     NumOfPage =  write_size / Flash_SectorSize;
     NumOfSingle = write_size % Flash_SectorSize;
-
+    //QSPI_FLASH_Wait_Busy();
     //printf("[spi flash] write: addr=0x%08lX, size=%u, Addr=%u, count=%u, NumOfPage=%u, NumOfSingle=%u\r\n",
     //    write_addr, write_size, Addr, count, NumOfPage, NumOfSingle);
     if (Addr == 0)

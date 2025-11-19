@@ -77,7 +77,7 @@ void MX_GPIO_Init(void)
 
   //ADS1256 DRDY pin configuration for external interrupt 1, pull-up resistor, drop-edge trigger interrupt
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = ADC_DRDY_Pin;
+  GPIO_InitStruct.Pin = ADC_DRDY_Pin||GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(ADC_DRDY_GPIO_Port, &GPIO_InitStruct);
